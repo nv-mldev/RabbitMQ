@@ -1,5 +1,8 @@
 import pika
 import json
+import logging
+
+logging.getLogger("pika").setLevel(logging.WARNING)
 
 
 def main():
@@ -17,22 +20,22 @@ def main():
     # Declare a fanout exchange
     channel.exchange_declare(exchange="server-traces", exchange_type="fanout")
 
-    # Callback function to process notification messages
+    # Callback function to process logging messages
     def callback(ch, method, properties, body):
         message = json.loads(body)
-        notification_data = message.get("notifications", "No notification data")
-        print(f"📧 NOTIFICATION SERVICE - Processing: {notification_data}")
-        # Add your notification logic here (send emails, push notifications)
+        log_data = message.get("logging", "No logging data")
+        print(f"📝 LOGGING SERVICE - Processing: {log_data}")
+        # Add your logging logic here (write to files, databases, etc.)
 
-    # Create temporary queue for real-time notifications (old notifications less useful)
-    result = channel.queue_declare(queue="", exclusive=True)
-    queue_name = result.method.queue
+    # Create a durable named queue for logging
+    queue_name = "logging_queue"
+    channel.queue_declare(queue=queue_name, durable=True)
     channel.queue_bind(exchange="server-traces", queue=queue_name)
 
     # Start consuming messages
     channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
 
-    print("📧 Notification Service waiting for messages. To exit press CTRL+C")
+    print("📝 Logging Service waiting for messages. To exit press CTRL+C")
     channel.start_consuming()
 
 

@@ -1,5 +1,8 @@
 import pika
 import json
+import logging
+
+logging.getLogger("pika").setLevel(logging.WARNING)  # Suppress pika debug logs
 
 
 def main():
